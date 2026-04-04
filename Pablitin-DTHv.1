@@ -1,0 +1,97 @@
+-- [[ PABLO_DTH HUB v15 - FORCE LOAD ]] --
+repeat task.wait() until game:IsLoaded()
+
+local player = game.Players.LocalPlayer
+local RS = game:GetService("ReplicatedStorage")
+local VU = game:GetService("VirtualUser")
+local muscleEvent = RS:WaitForChild("muscleEvent")
+
+-- Intentar cargar en la carpeta de la interfaz del jugador
+local UI = player:FindFirstChild("PlayerGui") or game:GetService("CoreGui")
+
+if UI:FindFirstChild("PabloFinalRed") then
+    UI.PabloFinalRed:Destroy()
+end
+
+-- --- DISEÑO DE LA INTERFAZ ---
+local sg = Instance.new("ScreenGui", UI)
+sg.Name = "PabloFinalRed"
+sg.ResetOnSpawn = false
+
+local main = Instance.new("Frame", sg)
+main.Size = UDim2.new(0, 350, 0, 300)
+main.Position = UDim2.new(0.5, -175, 0.3, 0)
+main.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+main.BorderSizePixel = 2
+main.BorderColor3 = Color3.fromRGB(255, 0, 0)
+main.Active = true
+main.Draggable = true
+
+local top = Instance.new("Frame", main)
+top.Size = UDim2.new(1, 0, 0, 35)
+top.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+top.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel", top)
+title.Size = UDim2.new(1, 0, 1, 0)
+title.Text = "PABLO_DTH HUB v15 (RED)"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.SourceSansBold
+title.BackgroundTransparency = 1
+
+-- --- FUNCIÓN DE BOTONES ---
+local function addBtn(txt, yPos, callback)
+    local btn = Instance.new("TextButton", main)
+    btn.Size = UDim2.new(0.9, 0, 0, 40)
+    btn.Position = UDim2.new(0.05, 0, 0, yPos)
+    btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+    btn.Text = "[ OFF ] " .. txt
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Font = Enum.Font.SourceSansBold
+    
+    local active = false
+    btn.MouseButton1Click:Connect(function()
+        active = not active
+        btn.Text = active and "[ ON ] " .. txt or "[ OFF ] " .. txt
+        btn.TextColor3 = active and Color3.new(255, 0, 0) or Color3.new(1,1,1)
+        callback(active)
+    end)
+end
+
+-- --- OPCIONES ---
+_G.Fuerza = false
+_G.Rocas = false
+
+addBtn("Auto Fuerza (Pesas)", 50, function(v) _G.Fuerza = v end)
+addBtn("Auto Rocas (Durabilidad)", 100, function(v) _G.Rocas = v end)
+addBtn("Auto Rebirth", 150, function(v) _G.Rebirth = v end)
+
+-- --- BUCLE DE ACCIÓN ---
+task.spawn(function()
+    while true do
+        if _G.Fuerza then
+            local char = player.Character
+            local tool = char and char:FindFirstChildOfClass("Tool") or player.Backpack:FindFirstChildOfClass("Tool")
+            if tool and (tool.Name:find("Weight") or tool.Name:find("Pesa")) then
+                if tool.Parent == player.Backpack then tool.Parent = char end
+                muscleEvent:FireServer("liftWeight", tool.Name)
+                tool:Activate()
+            end
+        end
+        if _G.Rocas then
+            muscleEvent:FireServer("trainDurability", "Rock")
+        end
+        if _G.Rebirth then
+            muscleEvent:FireServer("rebirthRequest")
+        end
+        task.wait(0.05)
+    end
+end)
+
+-- ANTI-AFK
+player.Idled:Connect(function()
+    VU:CaptureController()
+    VU:ClickButton1(Vector2.new())
+end)
+
+print("PABLO_DTH v15: Cargado correctamente.")
