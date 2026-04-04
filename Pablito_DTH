@@ -1,0 +1,112 @@
+-- 👑 MODO DIOS REAL
+
+local lastSell = 0
+local lastRebirth = 0
+
+-- 📊 HUD
+local statsGui = Instance.new("ScreenGui", game.CoreGui)
+local statsLabel = Instance.new("TextLabel", statsGui)
+statsLabel.Size = UDim2.new(0,250,0,100)
+statsLabel.Position = UDim2.new(0,10,0.7,0)
+statsLabel.BackgroundColor3 = Color3.fromRGB(0,0,0)
+statsLabel.TextColor3 = Color3.fromRGB(0,255,150)
+statsLabel.TextScaled = true
+
+-- 📊 GET STATS
+local function getStats()
+    local ls = player:FindFirstChild("leaderstats")
+    if not ls then return 0 end
+    return ls:FindFirstChild("Strength") and ls.Strength.Value or 0
+end
+
+-- 🧠 DETECTAR PELIGRO
+local function getDangerPlayer()
+    for _,v in pairs(game.Players:GetPlayers()) do
+        if v ~= player and v.Character and v:FindFirstChild("leaderstats") then
+            
+            local enemyStr = v.leaderstats:FindFirstChild("Strength") and v.leaderstats.Strength.Value or 0
+            local myStr = getStats()
+
+            if enemyStr > myStr * 1.5 then
+                local dist = (char.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).Magnitude
+                if dist < 60 then
+                    return v
+                end
+            end
+        end
+    end
+end
+
+-- 🏃 ESCAPAR
+local function escape()
+    char:MoveTo(Vector3.new(0,100,0))
+end
+
+-- 🪨 MEJOR ROCA
+local function getBestRock()
+    local best,dist=nil,math.huge
+
+    for _,v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Part") and v.Name:lower():find("rock") then
+            local d=(char.HumanoidRootPart.Position - v.Position).Magnitude
+            if d < dist then
+                dist = d
+                best = v
+            end
+        end
+    end
+
+    return best,dist
+end
+
+-- 💰 BAG FULL
+local function isFull()
+    return getStats() >= 100000
+end
+
+-- 🧠 LOOP PRINCIPAL
+task.spawn(function()
+    while true do
+        local strength = getStats()
+
+        -- 📊 HUD UPDATE
+        statsLabel.Text = "👑 GOD MODE\n💪 "..strength
+
+        -- ⚠️ DETECTAR PELIGRO
+        local danger = getDangerPlayer()
+        if danger then
+            escape()
+            task.wait(1)
+            continue
+        end
+
+        -- 🪨 FARM
+        local rock,dist = getBestRock()
+
+        if rock and dist < 80 then
+            char:MoveTo(rock.Position)
+            rs.rEvents.punchEvent:FireServer()
+        else
+            char:MoveTo(bestZone().pos)
+        end
+
+        -- 💪 LIFT
+        rs.rEvents.liftWeight:FireServer()
+
+        -- 💰 SELL
+        if isFull() and tick() - lastSell > 3 then
+            rs.rEvents.sellStrength:FireServer()
+            lastSell = tick()
+        end
+
+        -- 🔁 REBIRTH
+        if tick() - lastRebirth > 10 then
+            pcall(function()
+                rs.rEvents.rebirthRemote:InvokeServer()
+                lastRebirth = tick()
+            end)
+        end
+
+        task.wait(0.15)
+    end
+end)
