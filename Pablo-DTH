@@ -1,0 +1,129 @@
+-- 👑 PABLO_DTHPRIME ULTRA HUB PREMIUM
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local rs = game:GetService("ReplicatedStorage")
+local vu = game:GetService("VirtualUser")
+local tpService = game:GetService("TeleportService")
+local TweenService = game:GetService("TweenService")
+local UIS = game:GetService("UserInputService")
+
+-- CONFIG
+getgenv().Config = {
+    AutoFarmAI=false,
+    AutoLift=false,
+    AutoSell=false,
+    AutoKills=false,
+    AutoRebirth=false,
+    AutoRock=false,
+    AutoZone=false,
+    Stealth=false
+}
+
+getgenv().KillRange = 25
+
+-- ANTI AFK
+player.Idled:Connect(function()
+    vu:Button2Down(Vector2.new(), workspace.CurrentCamera.CFrame)
+    wait(1)
+    vu:Button2Up(Vector2.new(), workspace.CurrentCamera.CFrame)
+end)
+
+-- GUI BASE
+local gui = Instance.new("ScreenGui", game.CoreGui)
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 400, 0, 340)
+main.Position = UDim2.new(0.05,0,0.25,0)
+main.BackgroundColor3 = Color3.fromRGB(15,15,15)
+
+-- DRAG
+local drag=false
+local dragStart,startPos
+main.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag=true
+        dragStart=i.Position
+        startPos=main.Position
+    end
+end)
+
+main.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        drag=false
+    end
+end)
+
+UIS.InputChanged:Connect(function(i)
+    if drag then
+        local delta=i.Position-dragStart
+        main.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+delta.X,startPos.Y.Scale,startPos.Y.Offset+delta.Y)
+    end
+end)
+
+-- TITLE
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,35)
+title.Text = "👑 Pablo_DTHPRIME ULTRA"
+title.TextColor3 = Color3.fromRGB(0,255,150)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+
+-- 📏 RESIZE
+local compact=false
+local normal=UDim2.new(0,400,0,340)
+local small=UDim2.new(0,200,0,120)
+
+local resizeBtn=Instance.new("TextButton", main)
+resizeBtn.Size=UDim2.new(0,110,0,25)
+resizeBtn.Position=UDim2.new(1,-115,0,5)
+resizeBtn.Text="Compact"
+
+local function resize(size)
+    TweenService:Create(main,TweenInfo.new(0.25),{Size=size}):Play()
+end
+
+resizeBtn.MouseButton1Click:Connect(function()
+    compact=not compact
+    if compact then
+        resize(small)
+        resizeBtn.Text="Expand"
+        for _,v in pairs(main:GetChildren()) do
+            if v~=title and v~=resizeBtn then
+                v.Visible=false
+            end
+        end
+    else
+        resize(normal)
+        resizeBtn.Text="Compact"
+        for _,v in pairs(main:GetChildren()) do
+            v.Visible=true
+        end
+    end
+end)
+
+-- TABS BASE
+local tabBar = Instance.new("Frame", main)
+tabBar.Size = UDim2.new(1,0,0,30)
+tabBar.Position = UDim2.new(0,0,0,35)
+
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1,0,1,-65)
+content.Position = UDim2.new(0,0,0,65)
+
+local tabs={}
+
+-- UI PREMIUM FUNCTIONS
+local function createTab(name)
+    local btn = Instance.new("TextButton", tabBar)
+    btn.Size = UDim2.new(0,100,1,0)
+    btn.Text = name
+
+    local frame = Instance.new("ScrollingFrame", content)
+    frame.Size = UDim2.new(1,0,1,0)
+    frame.ScrollBarThickness = 5
+    frame.Visible=false
+
+    local layout = Instance.new("UIListLayout", frame)
+    layout.Padding = UDim.new(0,8)
+
+    layout
